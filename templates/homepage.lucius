@@ -1,0 +1,22 @@
+h1 {
+    text-align: center;
+    margin-bottom: 30px
+}
+h2##{aDomId} {
+    color: #990
+}
+div.grid-item {
+    background: #eaeaea;
+    width: 200px;
+    margin: 5px;
+    padding: 3px;
+}
+footer {
+    text-align: center
+}
+.input-sm {
+    margin-left: 20px
+}
+div.container {
+    width: 100%;
+}
