@@ -9,24 +9,33 @@ module Site
   ) where
 
 ------------------------------------------------------------------------------
-import           Data.ByteString (ByteString)
-import qualified Data.Text as T
+-- import           Data.ByteString (ByteString)
+import qualified Data.ByteString      as B
+import qualified Data.ByteString.Lazy as L
 import           Snap.Snaplet
 import           Snap.Snaplet.Heist
 import           Snap.Util.FileServe (serveDirectory)
-import           Application
+import           Application (H
+                    , doSearch
+                )
+import           Snap.Core (getParam)
 ------------------------------------------------------------------------------
-
-type H = Handler App App ()
-
 
 handleHomepage :: H
 handleHomepage = error "Meh"
 
 
-routes :: [(ByteString, H)]
+searchHandler :: H
+searchHandler = do
+    q <- getParam "query"
+    case q of
+         Nothing -> handleHomepage
+         Just q' -> doSearch q'
+
+
+routes :: [(B.ByteString, H)]
 routes = [ ("/home",           handleHomepage)
-         , ("/search/:query",  undefined)
+         , ("/search/:query",  searchHandler)
          -- | Serves static files like images, css, and js.
          , ("",                serveDirectory "static")
          ]
@@ -36,7 +45,7 @@ routes = [ ("/home",           handleHomepage)
 -- | The application initializer.
 app :: SnapletInit App App
 app = makeSnaplet "app" "super-reference!" Nothing $ do
-    h <- nestSnaplet "" heist (heistInit "templates")
+    h <- nestSnaplet "heist" heist (heistInit "templates")
     addRoutes routes
     return $ App h
 
