@@ -1,5 +1,6 @@
 dist
 cabal-dev
+yesod-devel
 *.o
 *.hi
 *.chi
@@ -16,5 +17,14 @@ cabal.sandbox.config
 *.hp
 .ghci
 
-# Snap things
-log/
+dist*
+static/tmp/
+static/combined/
+config/client_session_key.aes
+*.hi
+*.o
+*.sqlite3
+.hsenv*
+cabal-dev/
+.DS_Store
+*.swp
