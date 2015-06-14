@@ -11,24 +11,26 @@ import Text.BibTeX.Parse        (file)
 import Text.BibTeX.Entry        (T (..)
                                 , lowerCaseFieldNames)
 import Data.List.Split          (splitOn)
-
+import qualified GHC.List as    L
 
 data Bib = Bib {
       _title     :: String
     , _key       :: String
     , _entryType :: String
-    , _authors   :: [String]
+    , _author    :: String
     , _file      :: String
     , _url       :: String
+    , _year      :: String
     }
 
 normalise :: Text.BibTeX.Entry.T -> Bib
-normalise (Cons entryType id fields) = Bib title id entryType authors file url
+normalise (Cons entryType id fields) = Bib title id entryType author file url year
   where
       title   = findOrEmpty "title" fields
-      authors = splitAuthors (findOrEmpty "author" fields)
+      author  = L.head (splitAuthors (findOrEmpty "author" fields))
       file    = findOrEmpty "file" fields
       url     = findOrEmpty "url" fields
+      year    = findOrEmpty "year" fields
 
 
 -- | Split authors based on how we think the strings
@@ -54,9 +56,6 @@ getHomeR = do
     defaultLayout $ do
         bs <- liftIO bibEntries
         let entries = map normalise bs
-        -- Two worse options:
-        -- entries <- liftIO ( bibEntries >>= return . (map normalise) )
-        -- entries <- liftIO $ (fmap . fmap) (normalise) bibEntries
         aDomId <- newIdent
         setTitle "super-reference!"
         $(widgetFile "homepage")
@@ -72,9 +71,9 @@ testBibEntries = [
 
 bibEntries :: IO [Text.BibTeX.Entry.T]
 bibEntries = do
-      result  <- parseFromFile file "refs.bib"
+      result  <- parseFromFile file "quant.bib"
       entries <- case result of
-                     Left  _  -> return []
+                     Left  _  -> error (show result) -- $return []
                      Right xs -> return (map lowerCaseFieldNames xs)
       return entries
 

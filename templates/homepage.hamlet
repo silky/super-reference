@@ -1,10 +1,11 @@
 <h1>super-reference!
 
 <div class="grid">
-    $forall Bib title _ _ authors file url <- entries
+    $forall Bib title _ _ author file url year <- entries
         <div class="grid-item"> #{title}
             <br />
-            $forall author <- authors
-                <!--<span>#{author}</span>-->
+            <small>#{author}, #{year}</small>
+            <br />
+            <a href="#">pdf</a>
 
 <br style="clear: both" />

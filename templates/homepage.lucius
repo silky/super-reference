@@ -1,6 +1,9 @@
 h1 {
     text-align: center;
-    margin-bottom: 30px
+    margin-bottom: 30px;
+    background: #26FF8B;
+    letter-spacing: -2px;
+    padding: 4px;
 }
 h2##{aDomId} {
     color: #990
@@ -10,7 +13,20 @@ div.grid-item {
     width: 200px;
     margin: 5px;
     padding: 3px;
+    font-family: "Courier New";
+    letter-spacing: -1px;
 }
+div.grid-item a:hover {
+    color: red;
+}
+
+div.grid-item a {
+    font-size: 0.8em;
+    color: black;
+    padding: 2px;
+    background: #dadada;
+}
+
 footer {
     text-align: center
 }

@@ -80,7 +80,7 @@ library
                  , containers
                  , vector
                  , time
-                 , bibtex
+                 , bibtex                        >= 0.1.0.7
                  , parsec
                  , split
 
