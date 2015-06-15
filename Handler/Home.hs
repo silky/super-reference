@@ -12,6 +12,7 @@ import Text.BibTeX.Entry        (T (..)
                                 , lowerCaseFieldNames)
 import Data.List.Split          (splitOn)
 import qualified GHC.List as    L
+import qualified Data.Map as    M
 
 data Bib = Bib {
       _title     :: String
@@ -22,6 +23,11 @@ data Bib = Bib {
     , _url       :: String
     , _year      :: String
     }
+
+
+pageSize :: Int
+pageSize = 200
+
 
 normalise :: Text.BibTeX.Entry.T -> Bib
 normalise (Cons entryType id fields) = Bib title id entryType author file url year
@@ -51,32 +57,28 @@ findOrEmpty s xs = r
                 Nothing -> ""
 
 
-getHomeR :: Handler Html
-getHomeR = do 
+getPagedHomeR :: Int -> Handler Html
+getPagedHomeR k = do
     defaultLayout $ do
         bs <- liftIO bibEntries
-        let entries = map normalise bs
+        let bibs = map normalise bs
+        let entries = take pageSize (drop ((k-1) * pageSize) bibs)
+        let numEntries = length bibs
         aDomId <- newIdent
         setTitle "super-reference!"
         $(widgetFile "homepage")
 
 
-testBibEntries :: [Text.BibTeX.Entry.T]
-testBibEntries = [
-      Cons "article" "nsilk2010" [("title", "Something")]
-    , Cons "article" "nsilk2015" [("title", "Another thing")]
-    , Cons "article" "emptyTitle" [("abstract", "Another thing")]
-    ]
-
+getHomeR :: Handler Html
+getHomeR = getPagedHomeR 1
 
 bibEntries :: IO [Text.BibTeX.Entry.T]
 bibEntries = do
       result  <- parseFromFile file "quant.bib"
       entries <- case result of
-                     Left  _  -> error (show result) -- $return []
+                     Left  _  -> error (show result)
                      Right xs -> return (map lowerCaseFieldNames xs)
       return entries
-
 
 postHomeR :: Handler Html
 postHomeR = error "Not implemented."

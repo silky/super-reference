@@ -4,4 +4,6 @@
 /robots.txt RobotsR GET
 
 / HomeR GET POST
+/page/#Int PagedHomeR GET
 /about AboutR GET
+/openPdf/#String OpenPdfR GET

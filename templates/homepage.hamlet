@@ -1,5 +1,7 @@
 <h1>super-reference!
 
+<p> #{numEntries} enties found.
+
 <div class="grid">
     $forall Bib title _ _ author file url year <- entries
         <div class="grid-item"> #{title}

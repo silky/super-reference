@@ -24,6 +24,7 @@ library
                      Settings.StaticFiles
                      Handler.Common
                      Handler.Home
+                     Handler.OpenPdf
                      Handler.About
 
     if flag(dev) || flag(library-only)
@@ -80,9 +81,10 @@ library
                  , containers
                  , vector
                  , time
-                 , bibtex                        >= 0.1.0.7
+                 , bibtex                        >= 0.1.0.9
                  , parsec
                  , split
+                 , process
 
 executable         super-reference
     if flag(library-only)
