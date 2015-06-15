@@ -85,6 +85,7 @@ library
                  , parsec
                  , split
                  , process
+                 , http-types
 
 executable         super-reference
     if flag(library-only)

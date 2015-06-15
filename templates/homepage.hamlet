@@ -3,11 +3,11 @@
 <p> #{numEntries} enties found.
 
 <div class="grid">
-    $forall Bib title _ _ author file url year <- entries
+    $forall Bib title _ _ author filePath url year <- entries
         <div class="grid-item"> #{title}
             <br />
             <small>#{author}, #{year}</small>
             <br />
-            <a href="#">pdf</a>
+            <a href="@{OpenPdfR filePath}" onclick="$.get('@{OpenPdfR filePath}'); return false;">pdf</a>
 
 <br style="clear: both" />

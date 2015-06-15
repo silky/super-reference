@@ -12,31 +12,36 @@ import Text.BibTeX.Entry        (T (..)
                                 , lowerCaseFieldNames)
 import Data.List.Split          (splitOn)
 import qualified GHC.List as    L
-import qualified Data.Map as    M
+import Network.HTTP.Types.URI   (urlEncode)
 
 data Bib = Bib {
       _title     :: String
     , _key       :: String
     , _entryType :: String
     , _author    :: String
-    , _file      :: String
+    , _filePath  :: String
     , _url       :: String
     , _year      :: String
     }
 
-
 pageSize :: Int
 pageSize = 200
 
+baseDir :: String
+baseDir = "/home/noon/research/library/"
+
 
 normalise :: Text.BibTeX.Entry.T -> Bib
-normalise (Cons entryType id fields) = Bib title id entryType author file url year
+normalise (Cons entryType id fields) = Bib title id entryType author filePath url year
   where
-      title   = findOrEmpty "title" fields
-      author  = L.head (splitAuthors (findOrEmpty "author" fields))
-      file    = findOrEmpty "file" fields
-      url     = findOrEmpty "url" fields
-      year    = findOrEmpty "year" fields
+      title    = findOrEmpty "title" fields
+      author   = L.head (splitAuthors (findOrEmpty "author" fields))
+      filePath = fullPath $ findOrEmpty "file" fields
+      url      = findOrEmpty "url" fields
+      year     = findOrEmpty "year" fields
+
+fullPath :: String -> String
+fullPath f = baseDir ++ L.head (splitOn ":" f)
 
 
 -- | Split authors based on how we think the strings
