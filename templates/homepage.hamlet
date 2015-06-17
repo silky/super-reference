@@ -1,12 +1,20 @@
 <h1>super-reference!
 
-<p> #{numEntries} enties found.
+<p class="pages"> Page:
+    $forall p <- pages
+        <a href="@{PagedHomeR p}">#{p}</a>
+    <small>(#{numEntries} enties found.)</small>
 
 <div class="grid">
     $forall Bib title _ _ author filePath url year <- entries
-        <div class="grid-item"> #{title}
+        <div class="grid-item"> <span>#{title}</span>
             <br />
             <small>#{author}, #{year}</small> |  
                 <a href="@{OpenPdfR filePath}" onclick="$.get('@{OpenPdfR filePath}'); return false;">pdf</a>
+                <a href="#">star</a>
 
 <br style="clear: both" />
+
+<p class="pages"> Page:
+    $forall p <- pages
+        <a href="@{PagedHomeR p}">#{p}</a>

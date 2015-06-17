@@ -40,6 +40,7 @@ normalise (Cons entryType id fields) = Bib title id entryType author filePath ur
       url      = findOrEmpty "url" fields
       year     = findOrEmpty "year" fields
 
+
 fullPath :: String -> String
 fullPath f = baseDir ++ L.head (splitOn ":" f)
 
@@ -61,6 +62,8 @@ findOrEmpty s xs = r
                 Just a  -> a
                 Nothing -> ""
 
+pagesList :: Int -> [Int]
+pagesList total = [1..div total pageSize + 1]
 
 getPagedHomeR :: Int -> Handler Html
 getPagedHomeR k = do
@@ -69,7 +72,7 @@ getPagedHomeR k = do
         let bibs = map normalise bs
         let entries = take pageSize (drop ((k-1) * pageSize) bibs)
         let numEntries = length bibs
-        aDomId <- newIdent
+        let pages = pagesList numEntries
         setTitle "super-reference!"
         $(widgetFile "homepage")
 

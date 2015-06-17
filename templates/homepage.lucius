@@ -1,13 +1,16 @@
 h1 {
-    text-align: center;
+    font-size: 3em;
+    text-align: left;
     margin-bottom: 30px;
-    background: #26FF8B;
-    letter-spacing: -2px;
-    padding: 4px;
+    border-bottom: solid 2px #BD7AFF;
+    letter-spacing: 1px;
+    font-family: "Ceviche One";
 }
-h2##{aDomId} {
-    color: #990
+
+p.pages a { padding: 5px;
+    background: #fafafa;
 }
+
 div.grid-item {
     background: #eaeaea;
     width: 400px;
@@ -15,16 +18,27 @@ div.grid-item {
     padding: 3px;
     font-family: "Courier New";
     letter-spacing: -1px;
+    border-bottom: solid 2px #bababa;
+    border-right: solid 2px #bababa;
 }
-div.grid-item a:hover {
-    color: red;
+
+div.grid-item:hover {
+    background: #D6FFFE;
+    border-bottom: solid 2px #9DC4C4;
+    border-right: solid 2px #9DC4C4;
+
+}
+a { color: #2E93DB; }
+a:hover { color: #BD7AFF }
+
+div.grid-item span {
+    font-family: "Arial";
+    letter-spacing: 0px;
 }
 
 div.grid-item a {
     font-size: 0.8em;
-    color: black;
     padding: 2px;
-    background: #dadada;
 }
 
 footer {
