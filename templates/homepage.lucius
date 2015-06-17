@@ -10,7 +10,7 @@ h2##{aDomId} {
 }
 div.grid-item {
     background: #eaeaea;
-    width: 200px;
+    width: 400px;
     margin: 5px;
     padding: 3px;
     font-family: "Courier New";

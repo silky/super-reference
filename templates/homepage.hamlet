@@ -6,8 +6,7 @@
     $forall Bib title _ _ author filePath url year <- entries
         <div class="grid-item"> #{title}
             <br />
-            <small>#{author}, #{year}</small>
-            <br />
-            <a href="@{OpenPdfR filePath}" onclick="$.get('@{OpenPdfR filePath}'); return false;">pdf</a>
+            <small>#{author}, #{year}</small> |  
+                <a href="@{OpenPdfR filePath}" onclick="$.get('@{OpenPdfR filePath}'); return false;">pdf</a>
 
 <br style="clear: both" />
