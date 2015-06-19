@@ -11,9 +11,16 @@ p.pages a { padding: 5px;
     background: #fafafa;
 }
 
+#search { display: block; }
+
+
+div.form-group { display: inline; }
+
+#search input[type="text"] { width: 80%; }
+
 div.grid-item {
     background: #eaeaea;
-    width: 400px;
+    width: 360px;
     margin: 5px;
     padding: 3px;
     font-family: "Courier New";
@@ -21,6 +28,7 @@ div.grid-item {
     border-bottom: solid 2px #bababa;
     border-right: solid 2px #bababa;
 }
+
 
 div.grid-item:hover {
     background: #D6FFFE;
@@ -39,6 +47,7 @@ div.grid-item span {
 div.grid-item a {
     font-size: 0.8em;
     padding: 2px;
+    color: blue;
 }
 
 footer {

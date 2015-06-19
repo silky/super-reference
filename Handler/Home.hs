@@ -10,76 +10,60 @@ import Text.Parsec.String       (parseFromFile)
 import Text.BibTeX.Parse        (file)
 import Text.BibTeX.Entry        (T (..)
                                 , lowerCaseFieldNames)
-import Data.List.Split          (splitOn)
+import Data.Text                (splitOn)
 import qualified GHC.List as    L
-import Network.HTTP.Types.URI   (urlEncode)
 
 data Bib = Bib {
-      _title     :: String
-    , _key       :: String
-    , _entryType :: String
-    , _author    :: String
-    , _filePath  :: String
-    , _url       :: String
-    , _year      :: String
+      _title     :: Text
+    , _key       :: Text
+    , _entryType :: Text
+    , _author    :: Text
+    , _filePath  :: Text
+    , _url       :: Text
+    , _year      :: Text
     }
+
+-- | BibTeX-reading things ...
 
 pageSize :: Int
 pageSize = 200
 
-baseDir :: String
+pagesList :: Int -> [Int]
+pagesList total = [1..div total pageSize + 1]
+
+baseDir :: Text
 baseDir = "/home/noon/research/library/"
 
-
 normalise :: Text.BibTeX.Entry.T -> Bib
-normalise (Cons entryType id fields) = Bib title id entryType author filePath url year
+normalise (Cons entryType id fields) = Bib title (pack id) (pack entryType) author filePath url year
   where
       title    = findOrEmpty "title" fields
       author   = L.head (splitAuthors (findOrEmpty "author" fields))
       filePath = fullPath $ findOrEmpty "file" fields
       url      = findOrEmpty "url" fields
       year     = findOrEmpty "year" fields
-
-
-fullPath :: String -> String
-fullPath f = baseDir ++ L.head (splitOn ":" f)
-
-
--- | Split authors based on how we think the strings
---   are formatted.
-splitAuthors :: String -> [String]
-splitAuthors s = splitOn " and " s
+      --
+      -- | Get the full path to the file
+      fullPath f = baseDir ++ L.head (splitOn ":" f)
+      --
+      -- | Split authors based on how we think the strings
+      --   are formatted.
+      splitAuthors s = splitOn " and " s
 
 
 -- | In the given list, look for a specific string
 --   and if we find it return that string, otherwise
 --   return the empty string.
-findOrEmpty :: String -> [(String, String)] -> String
+findOrEmpty :: Text -> [(String, String)] -> Text
 findOrEmpty s xs = r
   where
-      t = lookup s xs
+      t = lookup (unpack s) xs
       r = case t of
-                Just a  -> a
+                Just a  -> (pack a)
                 Nothing -> ""
 
-pagesList :: Int -> [Int]
-pagesList total = [1..div total pageSize + 1]
 
-getPagedHomeR :: Int -> Handler Html
-getPagedHomeR k = do
-    defaultLayout $ do
-        bs <- liftIO bibEntries
-        let bibs = map normalise bs
-        let entries = take pageSize (drop ((k-1) * pageSize) bibs)
-        let numEntries = length bibs
-        let pages = pagesList numEntries
-        setTitle "super-reference!"
-        $(widgetFile "homepage")
-
-
-getHomeR :: Handler Html
-getHomeR = getPagedHomeR 1
-
+-- | Read in the list of BibTeX entries.
 bibEntries :: IO [Text.BibTeX.Entry.T]
 bibEntries = do
       result  <- parseFromFile file "quant.bib"
@@ -88,10 +72,62 @@ bibEntries = do
                      Right xs -> return (map lowerCaseFieldNames xs)
       return entries
 
-postHomeR :: Handler Html
-postHomeR = error "Not implemented."
+
+-- | Search the title case-insensitively.
+search :: Text -> [Bib] -> [Bib]
+search str bs =
+    filter (\b -> (toLower str) `isInfixOf` (toLower (_title b))) bs
+
+
+getPagedHomeR :: Int -> Handler Html
+getPagedHomeR k = do
+    --
+    -- | Form things
+    ((result, formWidget), formEncType) <- runFormGet searchForm
+    let searchString = case result of
+             FormSuccess res -> Just res
+             _               -> Nothing
+    defaultLayout $ do
+        --
+        -- | Obtain BibTeX data
+        bs <- liftIO bibEntries
+        let bibs        = case searchString of
+                            -- | Filtered
+                            Just s -> search s (map normalise bs)
+                            --
+                            -- | Everything
+                            _      -> map normalise bs
+            entries     = take pageSize (drop ((k-1) * pageSize) bibs)
+            numEntries  = length bibs
+            pages       = pagesList numEntries
+        --
+        -- | Render
+        setTitle "super-reference!"
+        $(widgetFile "homepage")
+
+
+getHomeR :: Handler Html
+getHomeR = getPagedHomeR 1
+
+
+-- postHomeR :: Handler Html
 -- postHomeR = do
---     ((result, formWidget), formEnctype) <- runFormPost sampleForm
+--     ((result, formWidget), formEnctype) <- runFormPost searchForm
+--     let submission = case result of
+--             FormSuccess res -> Just res
+--             _ -> Nothing
+--     defaultLayout $ do
+--         --
+--         -- | Obtain BibTeX data
+--         bs <- liftIO bibEntries
+--         let bibs        = map normalise bs
+--             entries     = take pageSize (drop ((k-1) * pageSize) bibs)
+--             numEntries  = length bibs
+--             pages       = pagesList numEntries
+--         --
+--         -- | Render
+--         setTitle "super-reference!"
+--         $(widgetFile "homepage")
 --     let handlerName = "postHomeR" :: Text
 --         msg = "ok" :: Text-- bibEntries
 --         entries = bibEntries
@@ -104,7 +140,6 @@ postHomeR = error "Not implemented."
 --         $(widgetFile "homepage")
 
 
-sampleForm :: Form (FileInfo, Text)
-sampleForm = renderBootstrap3 BootstrapBasicForm $ (,)
-    <$> fileAFormReq "Choose a file"
-    <*> areq textField (withSmallInput "What's on the file?") Nothing
+searchForm :: Form Text
+searchForm = renderBootstrap3 BootstrapBasicForm $
+    areq textField (withSmallInput "Search") Nothing

@@ -3,7 +3,7 @@
 /favicon.ico FaviconR GET
 /robots.txt RobotsR GET
 
-/ HomeR GET POST
+/ HomeR GET
 /page/#Int PagedHomeR GET
 /about AboutR GET
-/openPdf/#String OpenPdfR GET
+/openPdf/#Text OpenPdfR GET
