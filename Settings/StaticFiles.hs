@@ -1,7 +1,9 @@
 module Settings.StaticFiles where
 
+import System.IO
+
 import Settings     (appStaticDir, compileTimeAppSettings)
-import Yesod.Static (staticFiles)
+import Yesod.Static (staticFiles, staticFilesList)
 
 -- This generates easy references to files in the static directory at compile time,
 -- giving you compile-time verification that referenced files exist.
@@ -13,6 +15,10 @@ import Yesod.Static (staticFiles)
 --     js_script_js
 --
 -- If the identifier is not available, you may use:
---
---     StaticFile ["js", "script.js"] []
-staticFiles (appStaticDir compileTimeAppSettings)
+
+-- Old way:
+-- staticFiles (appStaticDir compileTimeAppSettings)
+
+-- | Only generate the static files we want, not all of them, else things
+--   explode (because MathJax contains thousands).
+staticFilesList "static" ["css/bootstrap.css"]
