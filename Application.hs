@@ -31,6 +31,9 @@ import Handler.Common
 import Handler.Home
 import Handler.OpenPdf
 import Handler.About
+import Text.Parsec.String       (parseFromFile)
+import Text.BibTeX.Parse        (file)
+import qualified Text.BibTeX.Entry as BibTeX
 
 -- This line actually creates our YesodDispatch instance. It is the second half
 -- of the call to mkYesodData which occurs in Foundation.hs. Please see the
@@ -51,8 +54,22 @@ makeFoundation appSettings = do
         (if appMutableStatic appSettings then staticDevel else static)
         (appStaticDir appSettings)
 
+    bibtexDb <- liftIO $ bibEntries
+    -- let bibtexDb = [] :: [BibTeX.T]
+
     -- Return the foundation
     return App {..}
+
+
+-- | Read in the list of BibTeX entries.
+bibEntries :: IO [BibTeX.T]
+bibEntries = do
+      result  <- parseFromFile file "quant.bib"
+      entries <- case result of
+                     Left  _  -> error  (show result)
+                     Right xs -> return (map BibTeX.lowerCaseFieldNames xs)
+      return entries
+
 
 -- | Convert our foundation to a WAI Application by calling @toWaiAppPlain@ and
 -- applyng some additional middlewares.

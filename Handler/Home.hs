@@ -6,10 +6,7 @@ import Yesod.Form.Bootstrap3    ( BootstrapFormLayout (..)
                                 , withSmallInput
                                 )
 
-import Text.Parsec.String       (parseFromFile)
-import Text.BibTeX.Parse        (file)
-import Text.BibTeX.Entry        (T (..)
-                                , lowerCaseFieldNames)
+import qualified Text.BibTeX.Entry as BibTeX
 import Data.Text                (splitOn)
 import qualified GHC.List as    L
 
@@ -25,19 +22,29 @@ data Bib = Bib {
 
 -- | BibTeX-reading things ...
 
+
 pageSize :: Int
 pageSize = 200
+
+
+stripChars :: Text -> Text -> Text
+stripChars = filter . flip onotElem
+
 
 pagesList :: Int -> [Int]
 pagesList total = [1..div total pageSize + 1]
 
+
 baseDir :: Text
 baseDir = "/home/noon/research/library/"
 
-normalise :: Text.BibTeX.Entry.T -> Bib
-normalise (Cons entryType id fields) = Bib title (pack id) (pack entryType) author filePath url year
+
+-- | TODO: Rename for "forDisplay" or something.
+normalise :: BibTeX.T -> Bib
+normalise (BibTeX.Cons entryType id fields) = Bib title (pack id) (pack entryType) author filePath url year
   where
-      title    = findOrEmpty "title" fields
+      -- | Note: Might be a poor choice.
+      title    = stripChars "{}" (findOrEmpty "title" fields)
       author   = L.head (splitAuthors (findOrEmpty "author" fields))
       filePath = fullPath $ findOrEmpty "file" fields
       url      = findOrEmpty "url" fields
@@ -63,16 +70,6 @@ findOrEmpty s xs = r
                 Nothing -> ""
 
 
--- | Read in the list of BibTeX entries.
-bibEntries :: IO [Text.BibTeX.Entry.T]
-bibEntries = do
-      result  <- parseFromFile file "quant.bib"
-      entries <- case result of
-                     Left  _  -> error (show result)
-                     Right xs -> return (map lowerCaseFieldNames xs)
-      return entries
-
-
 -- | Search the title case-insensitively.
 search :: Text -> [Bib] -> [Bib]
 search str bs =
@@ -81,6 +78,7 @@ search str bs =
 
 getPagedHomeR :: Int -> Handler Html
 getPagedHomeR k = do
+    yesod <- getYesod
     --
     -- | Form things
     ((result, formWidget), formEncType) <- runFormGet searchForm
@@ -90,7 +88,7 @@ getPagedHomeR k = do
     defaultLayout $ do
         --
         -- | Obtain BibTeX data
-        bs <- liftIO bibEntries
+        let bs = bibtexDb yesod
         let bibs        = case searchString of
                             -- | Filtered
                             Just s -> search s (map normalise bs)
@@ -108,36 +106,6 @@ getPagedHomeR k = do
 
 getHomeR :: Handler Html
 getHomeR = getPagedHomeR 1
-
-
--- postHomeR :: Handler Html
--- postHomeR = do
---     ((result, formWidget), formEnctype) <- runFormPost searchForm
---     let submission = case result of
---             FormSuccess res -> Just res
---             _ -> Nothing
---     defaultLayout $ do
---         --
---         -- | Obtain BibTeX data
---         bs <- liftIO bibEntries
---         let bibs        = map normalise bs
---             entries     = take pageSize (drop ((k-1) * pageSize) bibs)
---             numEntries  = length bibs
---             pages       = pagesList numEntries
---         --
---         -- | Render
---         setTitle "super-reference!"
---         $(widgetFile "homepage")
---     let handlerName = "postHomeR" :: Text
---         msg = "ok" :: Text-- bibEntries
---         entries = bibEntries
---         submission = case result of
---             FormSuccess res -> Just res
---             _ -> Nothing
---     defaultLayout $ do
---         aDomId <- newIdent
---         setTitle "Welcome To Yesod!"
---         $(widgetFile "homepage")
 
 
 searchForm :: Form Text

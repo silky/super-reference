@@ -5,6 +5,7 @@ import Text.Hamlet                 (hamletFile)
 import Text.Jasmine                (minifym)
 import Yesod.Core.Types            (Logger)
 import Yesod.Default.Util          (addStaticContentExternal)
+import qualified Text.BibTeX.Entry as BibTeX
 import qualified Yesod.Core.Unsafe as Unsafe
 
 -- | The foundation datatype for your application. This can be a good place to
@@ -16,6 +17,10 @@ data App = App
     , appStatic      :: Static -- ^ Settings for static file serving.
     , appHttpManager :: Manager
     , appLogger      :: Logger
+    --
+    -- | Our database. It's an IORef because we actually
+    --   need to change it, when we write things.
+    , bibtexDb       :: [BibTeX.T]
     }
 
 instance HasHttpManager App where
