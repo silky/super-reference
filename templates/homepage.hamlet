@@ -1,5 +1,13 @@
 <h1> <a href="/">super-reference!</a>
 
+<h3> Starred
+
+<div class="grid">
+     ^{listEntries starredBibs}
+
+
+<h3> Your database
+
 <div id="search">
     <form method="get"action=@{HomeR} enctype=#{formEncType}>
         ^{formWidget}
@@ -14,14 +22,7 @@
     <small>(#{numEntries} enties found.)</small>
 
 <div class="grid">
-    $forall Bib title _ _ author filePath url year <- entries
-        <div class="grid-item"> <span>#{title}</span>
-            <br />
-            <small>#{author}, #{year}</small> |  
-                <a href="@{OpenPdfR filePath}" onclick="$.get('@{OpenPdfR filePath}'); return false;">pdf</a>
-                $if not (null url)
-                    <a href="#{url}">link</a>
-                <a href="#">star</a>
+     ^{listEntries entries}
 
 <br style="clear: both" />
 

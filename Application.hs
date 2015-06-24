@@ -24,7 +24,7 @@ import Network.Wai.Middleware.RequestLogger (Destination (Logger),
                                              mkRequestLogger, outputFormat)
 import System.Log.FastLogger                (defaultBufSize, newStdoutLoggerSet,
                                              toLogStr)
-
+--import Data.IORef (IORef, newIORef, atomicModifyIORef)
 -- Import all relevant handler modules here.
 -- Don't forget to add new modules to your cabal file!
 import Handler.Common
@@ -54,8 +54,8 @@ makeFoundation appSettings = do
         (if appMutableStatic appSettings then staticDevel else static)
         (appStaticDir appSettings)
 
-    bibtexDb <- liftIO $ bibEntries
-    -- let bibtexDb = [] :: [BibTeX.T]
+    bibs <- liftIO bibEntries
+    bibtexDb <- liftIO $ newIORef bibs
 
     -- Return the foundation
     return App {..}
@@ -64,7 +64,7 @@ makeFoundation appSettings = do
 -- | Read in the list of BibTeX entries.
 bibEntries :: IO [BibTeX.T]
 bibEntries = do
-      result  <- parseFromFile file "quant.bib"
+      result  <- parseFromFile file "out.bib"
       entries <- case result of
                      Left  _  -> error  (show result)
                      Right xs -> return (map BibTeX.lowerCaseFieldNames xs)

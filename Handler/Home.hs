@@ -1,17 +1,21 @@
 module Handler.Home where
 
-import Import
-import Yesod.Form.Bootstrap3    ( BootstrapFormLayout (..)
+import           Import
+import           Yesod.Form.Bootstrap3 ( BootstrapFormLayout (..)
                                 , renderBootstrap3
                                 , withSmallInput
                                 )
-
+import           Data.Text (splitOn)
+import qualified GHC.List          as L
 import qualified Text.BibTeX.Entry as BibTeX
-import Data.Text                (splitOn)
-import qualified GHC.List as    L
+import           Control.Lens (element, (&), (.~))
+import           Data.List ((!!))
+import           Data.Aeson (object, (.=))
+import           Control.Concurrent (forkIO)
 
 data Bib = Bib {
-      _title     :: Text
+      _index     :: Int
+    , _title     :: Text
     , _key       :: Text
     , _entryType :: Text
     , _author    :: Text
@@ -40,8 +44,9 @@ baseDir = "/home/noon/research/library/"
 
 
 -- | TODO: Rename for "forDisplay" or something.
-normalise :: BibTeX.T -> Bib
-normalise (BibTeX.Cons entryType id fields) = Bib title (pack id) (pack entryType) author filePath url year
+normalise :: Int -> BibTeX.T -> Bib
+normalise idx (BibTeX.Cons entryType id fields) =
+      Bib idx title (pack id) (pack entryType) author filePath url year
   where
       -- | Note: Might be a poor choice.
       title    = stripChars "{}" (findOrEmpty "title" fields)
@@ -55,7 +60,7 @@ normalise (BibTeX.Cons entryType id fields) = Bib title (pack id) (pack entryTyp
       --
       -- | Split authors based on how we think the strings
       --   are formatted.
-      splitAuthors s = splitOn " and " s
+      splitAuthors = splitOn " and "
 
 
 -- | In the given list, look for a specific string
@@ -66,14 +71,14 @@ findOrEmpty s xs = r
   where
       t = lookup (unpack s) xs
       r = case t of
-                Just a  -> (pack a)
+                Just a  -> pack a
                 Nothing -> ""
 
 
 -- | Search the title case-insensitively.
 search :: Text -> [Bib] -> [Bib]
-search str bs =
-    filter (\b -> (toLower str) `isInfixOf` (toLower (_title b))) bs
+search str =
+    filter (\b -> toLower str `isInfixOf` toLower (_title b))
 
 
 getPagedHomeR :: Int -> Handler Html
@@ -82,23 +87,37 @@ getPagedHomeR k = do
     --
     -- | Form things
     ((result, formWidget), formEncType) <- runFormGet searchForm
+
+    -- This is magic right here.
+    let listEntries entries = $(widgetFile "listEntries")
+    
     let searchString = case result of
              FormSuccess res -> Just res
              _               -> Nothing
+    bibDb <- liftIO $ readIORef $ bibtexDb yesod
     defaultLayout $ do
         --
         -- | Obtain BibTeX data
-        let bs = bibtexDb yesod
+        --
+
+        let bs   = zip [1..] bibDb
+        let rawS = filter (\(_, b) -> isStarred b) bs
+        let rawU = filter (\(_, b) -> (not . isStarred) b) bs
+        let bibS = map (uncurry normalise) rawS
+        let bibU = map (uncurry normalise) rawU
+        --
         let bibs        = case searchString of
                             -- | Filtered
-                            Just s -> search s (map normalise bs)
+                            Just s -> search s bibU
                             --
                             -- | Everything
-                            _      -> map normalise bs
+                            _      -> bibU
             entries     = take pageSize (drop ((k-1) * pageSize) bibs)
             numEntries  = length bibs
             pages       = pagesList numEntries
         --
+        -- | Starred
+        let starredBibs = bibS
         -- | Render
         setTitle "super-reference!"
         $(widgetFile "homepage")
@@ -106,6 +125,48 @@ getPagedHomeR k = do
 
 getHomeR :: Handler Html
 getHomeR = getPagedHomeR 1
+
+
+-- | Here we take the index in the "bibtexDb" thing, and we write
+--   a value into it.
+getStarR :: Int -> Handler Value
+getStarR idx = do
+  yesod <- getYesod
+  bs <- liftIO $ readIORef $ bibtexDb yesod
+  -- Update the database,
+  let bs' = bs & element idx .~ toggleStarred (bs !! (idx - 1))
+  --
+  -- Write it, but don't wait, because we'll risk it.
+  liftIO $ do
+    _ <- forkIO $ BibTeX.writeToFile "out.bib" bs'
+    writeIORef (bibtexDb yesod) bs'
+    return ()
+  --
+  -- and save it in the IORef
+  --
+  return $ object ["success" .= True]
+
+
+isStarred :: BibTeX.T -> Bool
+isStarred (BibTeX.Cons _ _ fields) = case lookup starKey fields of
+  Just x -> x == "starred"
+  _      -> False
+
+
+-- | Note: This is lowercase, because we only deal with lower case.
+starKey :: String
+starKey = "superreference:starred"
+
+
+-- | For our special field "superReference_starred", let's either
+--   mark a thing as starred or unstarred.
+toggleStarred :: BibTeX.T -> BibTeX.T
+toggleStarred (BibTeX.Cons x y fields) = BibTeX.Cons x y fields'
+  where
+    fields'  = toggle starKey fields
+    toggle k = insertWithKey (\_ _ old -> case old of
+                                  "starred" -> "unstarred"
+                                  _         -> "starred") k "starred"
 
 
 searchForm :: Form Text

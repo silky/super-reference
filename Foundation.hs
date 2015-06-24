@@ -20,7 +20,7 @@ data App = App
     --
     -- | Our database. It's an IORef because we actually
     --   need to change it, when we write things.
-    , bibtexDb       :: [BibTeX.T]
+    , bibtexDb       :: IORef [BibTeX.T]
     }
 
 instance HasHttpManager App where

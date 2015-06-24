@@ -81,11 +81,12 @@ library
                  , containers
                  , vector
                  , time
-                 , bibtex                        >= 0.1.0.10
+                 , bibtex                        >= 0.1.0.13
                  , parsec
                  , split
                  , process
                  , http-types
+                 , lens
 
 executable         super-reference
     if flag(library-only)
