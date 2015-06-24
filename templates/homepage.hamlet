@@ -2,7 +2,7 @@
 
 <h3> Starred
 
-<div class="grid">
+<div class="top-grid">
      ^{listEntries starredBibs}
 
 

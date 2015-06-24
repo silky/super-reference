@@ -22,6 +22,7 @@ data Bib = Bib {
     , _filePath  :: Text
     , _url       :: Text
     , _year      :: Text
+    , _starred   :: Bool
     }
 
 -- | BibTeX-reading things ...
@@ -46,7 +47,7 @@ baseDir = "/home/noon/research/library/"
 -- | TODO: Rename for "forDisplay" or something.
 normalise :: Int -> BibTeX.T -> Bib
 normalise idx (BibTeX.Cons entryType id fields) =
-      Bib idx title (pack id) (pack entryType) author filePath url year
+      Bib idx title (pack id) (pack entryType) author filePath url year starred
   where
       -- | Note: Might be a poor choice.
       title    = stripChars "{}" (findOrEmpty "title" fields)
@@ -54,6 +55,7 @@ normalise idx (BibTeX.Cons entryType id fields) =
       filePath = fullPath $ findOrEmpty "file" fields
       url      = findOrEmpty "url" fields
       year     = findOrEmpty "year" fields
+      starred  = fromMaybe "" (lookup starKey fields) == "starred"
       --
       -- | Get the full path to the file
       fullPath f = baseDir ++ L.head (splitOn ":" f)
@@ -94,7 +96,7 @@ getPagedHomeR k = do
     let searchString = case result of
              FormSuccess res -> Just res
              _               -> Nothing
-    bibDb <- liftIO $ readIORef $ bibtexDb yesod
+    bibDb <- liftIO $ readIORef (bibtexDb yesod)
     defaultLayout $ do
         --
         -- | Obtain BibTeX data
@@ -133,8 +135,9 @@ getStarR :: Int -> Handler Value
 getStarR idx = do
   yesod <- getYesod
   bs <- liftIO $ readIORef $ bibtexDb yesod
-  -- Update the database,
-  let bs' = bs & element idx .~ toggleStarred (bs !! (idx - 1))
+  -- Update the database -- the one that was starred, change it
+  -- so that it isn't.
+  let bs' = bs & element (idx-1) .~ toggleStarred (bs !! (idx - 1))
   --
   -- Write it, but don't wait, because we'll risk it.
   liftIO $ do

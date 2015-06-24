@@ -1,12 +1,11 @@
 var elem = document.querySelector('.grid');
-var msnry = new Masonry( elem, {
+var msnry0 = new Masonry( elem, {
   // options
   itemSelector: '.grid-item',
   columnWidth: 200
 });
-
-// element argument can be a selector string
-//   for an individual element
-var msnry = new Masonry( '.grid', {
+var msnry1 = new Masonry( document.querySelector('.top-grid'), {
   // options
+  itemSelector: '.grid-item',
+  columnWidth: 200
 });
