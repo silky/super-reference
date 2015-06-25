@@ -6,6 +6,6 @@ $forall Bib idx title _ _ author filePath url year starred <- entries
             $if not (null url)
                 <a href="#{url}">link</a>
             $if starred
-                <a href="@{StarR idx}">unstar</a>
+                <a href="@{StarR idx}" onclick="$.get('@{StarR idx}'); return false;" class="star starred">unstar</a>
             $else
-                <a href="@{StarR idx}">star</a>
+               <a href="@{StarR idx}" onclick="$.get('@{StarR idx}'); return false;" class="star">star</a>

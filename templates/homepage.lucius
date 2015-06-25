@@ -13,7 +13,6 @@ p.pages a { padding: 5px;
 
 #search { display: block; }
 
-
 div.form-group { display: inline; }
 
 #search input[type="text"] { width: 80%; }

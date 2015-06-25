@@ -3,8 +3,7 @@
 <h3> Starred
 
 <div class="top-grid">
-     ^{listEntries starredBibs}
-
+     ^{listEntries bibS}
 
 <h3> Your database
 
@@ -18,7 +17,7 @@
 
 <p class="pages"> Page:
     $forall p <- pages
-        <a href="@{PagedHomeR p}">#{p}</a>
+        <a href="@{PagedHomeR p}?#{queryString}">#{p}</a>
     <small>(#{numEntries} enties found.)</small>
 
 <div class="grid">
@@ -28,4 +27,4 @@
 
 <p class="pages"> Page:
     $forall p <- pages
-        <a href="@{PagedHomeR p}">#{p}</a>
+        <a href="@{PagedHomeR p}?#{queryString}">#{p}</a>

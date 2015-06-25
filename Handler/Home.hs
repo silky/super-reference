@@ -10,7 +10,6 @@ import qualified GHC.List          as L
 import qualified Text.BibTeX.Entry as BibTeX
 import           Control.Lens (element, (&), (.~))
 import           Data.List ((!!))
-import           Data.Aeson (object, (.=))
 import           Control.Concurrent (forkIO)
 
 data Bib = Bib {
@@ -46,10 +45,9 @@ baseDir = "/home/noon/research/library/"
 
 -- | TODO: Rename for "forDisplay" or something.
 normalise :: Int -> BibTeX.T -> Bib
-normalise idx (BibTeX.Cons entryType id fields) =
-      Bib idx title (pack id) (pack entryType) author filePath url year starred
+normalise idx (BibTeX.Cons entryType ident fields) =
+      Bib idx title (pack ident) (pack entryType) author filePath url year starred
   where
-      -- | Note: Might be a poor choice.
       title    = stripChars "{}" (findOrEmpty "title" fields)
       author   = L.head (splitAuthors (findOrEmpty "author" fields))
       filePath = fullPath $ findOrEmpty "file" fields
@@ -69,12 +67,7 @@ normalise idx (BibTeX.Cons entryType id fields) =
 --   and if we find it return that string, otherwise
 --   return the empty string.
 findOrEmpty :: Text -> [(String, String)] -> Text
-findOrEmpty s xs = r
-  where
-      t = lookup (unpack s) xs
-      r = case t of
-                Just a  -> pack a
-                Nothing -> ""
+findOrEmpty s xs = pack $ fromMaybe "" (lookup (unpack s) xs)
 
 
 -- | Search the title case-insensitively.
@@ -86,6 +79,8 @@ search str =
 getPagedHomeR :: Int -> Handler Html
 getPagedHomeR k = do
     yesod <- getYesod
+    req   <- getRequest
+    let queryString = intercalate "&" $ map (\(s, v) -> concat [s, "=", v]) (reqGetParams req)
     --
     -- | Form things
     ((result, formWidget), formEncType) <- runFormGet searchForm
@@ -101,12 +96,10 @@ getPagedHomeR k = do
         --
         -- | Obtain BibTeX data
         --
-
-        let bs   = zip [1..] bibDb
-        let rawS = filter (\(_, b) -> isStarred b) bs
-        let rawU = filter (\(_, b) -> (not . isStarred) b) bs
-        let bibS = map (uncurry normalise) rawS
-        let bibU = map (uncurry normalise) rawU
+        let bs = zip [1..] bibDb
+            (rawS, rawU) = partition (\(_, b) -> isStarred b) bs
+            bibS = map (uncurry normalise) rawS
+            bibU = map (uncurry normalise) rawU
         --
         let bibs        = case searchString of
                             -- | Filtered
@@ -118,8 +111,6 @@ getPagedHomeR k = do
             numEntries  = length bibs
             pages       = pagesList numEntries
         --
-        -- | Starred
-        let starredBibs = bibS
         -- | Render
         setTitle "super-reference!"
         $(widgetFile "homepage")
@@ -135,8 +126,8 @@ getStarR :: Int -> Handler Value
 getStarR idx = do
   yesod <- getYesod
   bs <- liftIO $ readIORef $ bibtexDb yesod
-  -- Update the database -- the one that was starred, change it
-  -- so that it isn't.
+  --
+  -- Update the database
   let bs' = bs & element (idx-1) .~ toggleStarred (bs !! (idx - 1))
   --
   -- Write it, but don't wait, because we'll risk it.
@@ -145,15 +136,12 @@ getStarR idx = do
     writeIORef (bibtexDb yesod) bs'
     return ()
   --
-  -- and save it in the IORef
-  --
   return $ object ["success" .= True]
 
 
 isStarred :: BibTeX.T -> Bool
-isStarred (BibTeX.Cons _ _ fields) = case lookup starKey fields of
-  Just x -> x == "starred"
-  _      -> False
+isStarred (BibTeX.Cons _ _ fields) =
+  fromMaybe "" (lookup starKey fields) == "starred"
 
 
 -- | Note: This is lowercase, because we only deal with lower case.
