@@ -24,7 +24,80 @@ data Bib = Bib {
     , _starred   :: Bool
     }
 
--- | BibTeX-reading things ...
+
+-- | Homepage is paged homepage at page 1.
+getHomeR :: Handler Html
+getHomeR = getPagedHomeR 1
+
+
+-- | Show whatever page we've been asked to, and build up all
+--   the data we want to display.
+getPagedHomeR :: Int -> Handler Html
+getPagedHomeR k = do
+    yesod <- getYesod
+    req   <- getRequest
+    let queryString = intercalate "&" $ map (\(s, v) -> concat [s, "=", v]) (reqGetParams req)
+    --
+    -- | Form things
+    ((result, formWidget), formEncType) <- runFormGet searchForm
+
+    -- This is magic right here.
+    let listEntries entries = $(widgetFile "listEntries")
+    
+    let searchString = case result of
+             FormSuccess res -> Just res
+             _               -> Nothing
+    bibDb <- liftIO $ readIORef (bibtexDb yesod)
+    defaultLayout $ do
+        --
+        -- | Obtain BibTeX data
+        let bs = zip [1..] bibDb
+            (rawS, rawU) = partition (\(_, b) -> isStarred b) bs
+            bibS = map (uncurry normalise) rawS
+            bibU = map (uncurry normalise) rawU
+        --
+        let bibs        = case searchString of
+                            -- | Filtered
+                            Just s -> search s bibU
+                            --
+                            -- | Everything
+                            _      -> bibU
+            entries     = take pageSize (drop ((k-1) * pageSize) bibs)
+            numEntries  = length bibs
+            pages       = pagesList numEntries
+        --
+        -- | Render
+        setTitle "super-reference!"
+        $(widgetFile "homepage")
+
+
+
+-- | Here we take the index in the "bibtexDb" thing, and we write
+--   a value into it.
+getStarR :: Int -> Handler Value
+getStarR idx = do
+  yesod <- getYesod
+  bs <- liftIO $ readIORef $ bibtexDb yesod
+  --
+  -- Update the database
+  let bs' = bs & element (idx-1) .~ toggleStarred (bs !! (idx - 1))
+  --
+  -- Write it, but don't wait, because we'll risk it.
+  liftIO $ do
+    _ <- forkIO $ BibTeX.writeToFile "out.bib" bs'
+    writeIORef (bibtexDb yesod) bs'
+    return ()
+  --
+  return $ object ["success" .= True]
+
+
+searchForm :: Form Text
+searchForm = renderBootstrap3 BootstrapBasicForm $
+    areq textField (withSmallInput "Search") Nothing
+
+
+-- =====================================================================
+-- BibTeX-reading things ...
 
 
 pageSize :: Int
@@ -76,67 +149,6 @@ search str =
     filter (\b -> toLower str `isInfixOf` toLower (_title b))
 
 
-getPagedHomeR :: Int -> Handler Html
-getPagedHomeR k = do
-    yesod <- getYesod
-    req   <- getRequest
-    let queryString = intercalate "&" $ map (\(s, v) -> concat [s, "=", v]) (reqGetParams req)
-    --
-    -- | Form things
-    ((result, formWidget), formEncType) <- runFormGet searchForm
-
-    -- This is magic right here.
-    let listEntries entries = $(widgetFile "listEntries")
-    
-    let searchString = case result of
-             FormSuccess res -> Just res
-             _               -> Nothing
-    bibDb <- liftIO $ readIORef (bibtexDb yesod)
-    defaultLayout $ do
-        --
-        -- | Obtain BibTeX data
-        --
-        let bs = zip [1..] bibDb
-            (rawS, rawU) = partition (\(_, b) -> isStarred b) bs
-            bibS = map (uncurry normalise) rawS
-            bibU = map (uncurry normalise) rawU
-        --
-        let bibs        = case searchString of
-                            -- | Filtered
-                            Just s -> search s bibU
-                            --
-                            -- | Everything
-                            _      -> bibU
-            entries     = take pageSize (drop ((k-1) * pageSize) bibs)
-            numEntries  = length bibs
-            pages       = pagesList numEntries
-        --
-        -- | Render
-        setTitle "super-reference!"
-        $(widgetFile "homepage")
-
-
-getHomeR :: Handler Html
-getHomeR = getPagedHomeR 1
-
-
--- | Here we take the index in the "bibtexDb" thing, and we write
---   a value into it.
-getStarR :: Int -> Handler Value
-getStarR idx = do
-  yesod <- getYesod
-  bs <- liftIO $ readIORef $ bibtexDb yesod
-  --
-  -- Update the database
-  let bs' = bs & element (idx-1) .~ toggleStarred (bs !! (idx - 1))
-  --
-  -- Write it, but don't wait, because we'll risk it.
-  liftIO $ do
-    _ <- forkIO $ BibTeX.writeToFile "out.bib" bs'
-    writeIORef (bibtexDb yesod) bs'
-    return ()
-  --
-  return $ object ["success" .= True]
 
 
 isStarred :: BibTeX.T -> Bool
@@ -158,8 +170,3 @@ toggleStarred (BibTeX.Cons x y fields) = BibTeX.Cons x y fields'
     toggle k = insertWithKey (\_ _ old -> case old of
                                   "starred" -> "unstarred"
                                   _         -> "starred") k "starred"
-
-
-searchForm :: Form Text
-searchForm = renderBootstrap3 BootstrapBasicForm $
-    areq textField (withSmallInput "Search") Nothing
