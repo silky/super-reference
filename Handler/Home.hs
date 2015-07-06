@@ -25,6 +25,12 @@ data Bib = Bib {
     }
 
 
+-- TODO: Use lenses here.
+data SearchTerms = SearchTerms {
+      _stTitle      :: Text
+    , _stEntryType  :: Maybe Text
+}
+
 -- | Homepage is paged homepage at page 1.
 getHomeR :: Handler Html
 getHomeR = getPagedHomeR 1
@@ -43,7 +49,7 @@ getPagedHomeR k = do
 
     -- This is magic right here.
     let listEntries entries = $(widgetFile "listEntries")
-    
+
     let searchString = case result of
              FormSuccess res -> Just res
              _               -> Nothing
@@ -58,7 +64,7 @@ getPagedHomeR k = do
         --
         let bibs        = case searchString of
                             -- | Filtered
-                            Just s -> search s bibU
+                            Just s -> search (searchTerms s) bibU
                             --
                             -- | Everything
                             _      -> bibU
@@ -143,12 +149,30 @@ findOrEmpty :: Text -> [(String, String)] -> Text
 findOrEmpty s xs = pack $ fromMaybe "" (lookup (unpack s) xs)
 
 
--- | Search the title case-insensitively.
-search :: Text -> [Bib] -> [Bib]
-search str =
-    filter (\b -> toLower str `isInfixOf` toLower (_title b))
+searchTerms :: Text -> SearchTerms
+searchTerms s = SearchTerms (unwords terms) articleType
+  where
+    spaces = splitOn " " s
+    tokens = map (splitOn ":") spaces
+    --
+    -- Parse special terms
+    f ["type", val] (xs, _) = (xs, Just val)
+    f [val]         (xs, t) = (val : xs, t)
+    f _             (_,  t) = error $ "Invalid token: `" ++ show t ++ "`."
+    --
+    (terms, articleType) = foldr f ([], Nothing) tokens
 
 
+-- | Filter based on the search terms.
+search :: SearchTerms -> [Bib] -> [Bib]
+search = go
+  where
+    go (SearchTerms title Nothing)  = filter (f title)
+    go (SearchTerms title (Just t)) = filter (\b -> f title b && g t b)
+    -- title filter
+    f title b     = toLower title `isInfixOf` toLower (_title b)
+    -- type filter
+    g entryType b = toLower entryType == toLower (_entryType b)
 
 
 isStarred :: BibTeX.T -> Bool
