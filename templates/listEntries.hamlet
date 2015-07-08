@@ -8,7 +8,4 @@ $forall Bib idx title key entryType author filePath url year starred abstract <-
             $if starred
                 <a href="@{StarR idx}" onclick="$.get('@{StarR idx}'); return false;" class="star starred">unstar</a>
             $else
-               <a href="@{StarR idx}" onclick="$.get('@{StarR idx}'); return false;" class="star">star</a>
-
-    <div id="inf#{idx}" class="info-box">
-         #{abstract}
+                <a href="@{StarR idx}" onclick="$.get('@{StarR idx}'); return false;" class="star">star</a>

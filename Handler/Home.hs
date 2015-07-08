@@ -134,6 +134,7 @@ normalise idx (BibTeX.Cons entryType ident fields) =
       url      = findOrEmpty "url" fields
       year     = findOrEmpty "year" fields
       starred  = fromMaybe "" (lookup starKey fields) == "starred"
+      -- Note: We're not using this at the moment.
       abstract = findOrEmpty "abstract" fields
       --
       -- | Get the full path to the file

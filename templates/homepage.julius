@@ -9,13 +9,3 @@ var msnry1 = new Masonry( document.querySelector('.top-grid'), {
   itemSelector: '.grid-item',
   columnWidth: 200
 });
-
-$("div.grid-item").hover(
-  function(event) {
-    var sel = "#" + $(this).attr("_ref");
-    $(sel).css("left", event.pageX);
-    $(sel).css("top", event.pageY - 240);
-    $(sel).css("display", "inline");
-  },
-  function() { $("#" + $(this).attr("_ref") ).css("display", "none"); }
-);

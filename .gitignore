@@ -28,3 +28,5 @@ config/client_session_key.aes
 cabal-dev/
 .DS_Store
 *.swp
+
+.#*
