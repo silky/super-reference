@@ -58,3 +58,11 @@ footer {
 div.container {
     width: 100%;
 }
+div.info-box {
+   background: white;
+   width: 40%;
+   padding: 3px;
+   position: absolute;
+   display: none;
+   z-index: 999;
+}

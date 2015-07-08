@@ -22,6 +22,7 @@ data Bib = Bib {
     , _url       :: Text
     , _year      :: Text
     , _starred   :: Bool
+    , _abstract  :: Text
     }
 
 
@@ -125,7 +126,7 @@ baseDir = "/home/noon/research/library/"
 -- | TODO: Rename for "forDisplay" or something.
 normalise :: Int -> BibTeX.T -> Bib
 normalise idx (BibTeX.Cons entryType ident fields) =
-      Bib idx title (pack ident) (pack entryType) author filePath url year starred
+      Bib idx title (pack ident) (pack entryType) author filePath url year starred abstract
   where
       title    = stripChars "{}" (findOrEmpty "title" fields)
       author   = L.head (splitAuthors (findOrEmpty "author" fields))
@@ -133,6 +134,7 @@ normalise idx (BibTeX.Cons entryType ident fields) =
       url      = findOrEmpty "url" fields
       year     = findOrEmpty "year" fields
       starred  = fromMaybe "" (lookup starKey fields) == "starred"
+      abstract = findOrEmpty "abstract" fields
       --
       -- | Get the full path to the file
       fullPath f = baseDir ++ L.head (splitOn ":" f)
@@ -140,13 +142,10 @@ normalise idx (BibTeX.Cons entryType ident fields) =
       -- | Split authors based on how we think the strings
       --   are formatted.
       splitAuthors = splitOn " and "
-
-
--- | In the given list, look for a specific string
---   and if we find it return that string, otherwise
---   return the empty string.
-findOrEmpty :: Text -> [(String, String)] -> Text
-findOrEmpty s xs = pack $ fromMaybe "" (lookup (unpack s) xs)
+      --
+      -- | Find the thing in the list, otherwise return the empty string.
+      findOrEmpty :: Text -> [(String, String)] -> Text
+      findOrEmpty s xs = pack $ fromMaybe "" (lookup (unpack s) xs)
 
 
 searchTerms :: Text -> SearchTerms

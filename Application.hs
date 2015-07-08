@@ -55,20 +55,33 @@ makeFoundation appSettings = do
         (appStaticDir appSettings)
 
     bibs <- liftIO bibEntries
-    bibtexDb <- liftIO $ newIORef bibs
+    bibtexDb <- liftIO $ newIORef (sortByKey "year" bibs)
 
     -- Return the foundation
     return App {..}
 
 
+sortByKey :: String -> [BibTeX.T] -> [BibTeX.T]
+sortByKey key xs = sorted
+  where
+    sorted = sortBy f xs
+    f :: BibTeX.T -> BibTeX.T -> Ordering
+    -- | Note that we're comparing the other way round so that
+    --   we order descendingly.
+    fk = findOrEmpty key
+    f (BibTeX.Cons _ _ fs) (BibTeX.Cons _ _ fs') = compare (fk fs') (fk fs)
+    --
+    findOrEmpty :: String -> [(String, String)] -> String
+    findOrEmpty key list = fromMaybe "" (lookup key list)
+
+
 -- | Read in the list of BibTeX entries.
 bibEntries :: IO [BibTeX.T]
 bibEntries = do
-      result  <- parseFromFile file "out.bib"
-      entries <- case result of
-                     Left  _  -> error  (show result)
-                     Right xs -> return (map BibTeX.lowerCaseFieldNames xs)
-      return entries
+      result  <- parseFromFile file "all.bib"
+      case result of
+       Left  _  -> error  (show result)
+       Right xs -> return (map BibTeX.lowerCaseFieldNames xs)
 
 
 -- | Convert our foundation to a WAI Application by calling @toWaiAppPlain@ and
