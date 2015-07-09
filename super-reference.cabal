@@ -87,6 +87,7 @@ library
                  , process
                  , http-types
                  , lens
+                 , filepath
 
 executable         super-reference
     if flag(library-only)

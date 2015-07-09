@@ -35,6 +35,12 @@ div.grid-item:hover {
     border-right: solid 2px #9DC4C4;
 
 }
+
+div.grid-item span a {
+  font-size: 1.1em;
+  color: black;
+}
+
 a { color: #2E93DB; }
 a:hover { color: #BD7AFF }
 

@@ -1,5 +1,6 @@
 $forall Bib idx title key entryType author filePath url year starred abstract <- entries
-    <div class="grid-item" _ref="inf#{idx}"> <span>#{title}</span>
+    <div class="grid-item" _ref="inf#{idx}">
+        <span><a href="#">#{title}</a></span>
         <br />
         <small>#{author}, #{year}</small> |
             <a href="@{OpenPdfR filePath}" onclick="$.get('@{OpenPdfR filePath}'); return false;">pdf</a>

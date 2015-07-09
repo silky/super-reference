@@ -11,6 +11,9 @@ import qualified Text.BibTeX.Entry as BibTeX
 import           Control.Lens (element, (&), (.~))
 import           Data.List ((!!))
 import           Control.Concurrent (forkIO)
+import           System.FilePath  (takeFileName)
+import           System.Directory (copyFile, removeFile)
+import           Control.Monad    (when)
 
 data Bib = Bib {
       _index     :: Int
@@ -18,7 +21,7 @@ data Bib = Bib {
     , _key       :: Text
     , _entryType :: Text
     , _author    :: Text
-    , _filePath  :: Text
+    , _filePath  :: FilePath
     , _url       :: Text
     , _year      :: Text
     , _starred   :: Bool
@@ -84,19 +87,34 @@ getPagedHomeR k = do
 getStarR :: Int -> Handler Value
 getStarR idx = do
   yesod <- getYesod
-  bs <- liftIO $ readIORef $ bibtexDb yesod
+  bs <- liftIO $ readIORef (bibtexDb yesod)
   --
   -- Update the database
-  let bs' = bs & element (idx-1) .~ toggleStarred (bs !! (idx - 1))
+  let bibt = bs !! (idx-1)
+  let bs'  = bs & element (idx-1) .~ toggleStarred bibt
+  let bib  = normalise idx bibt
   --
   -- Write it, but don't wait, because we'll risk it.
   liftIO $ do
-    _ <- forkIO $ BibTeX.writeToFile "out.bib" bs'
+    _ <- forkIO $ BibTeX.writeToFile "all.bib" bs'
+    let filePath = unpack (_filePath bib)
+    let dbPath   = dropboxPath ++ takeFileName filePath
+    -- | Note: This is a bit sneaky: As we're toggling, and
+    --         `bibt` has the value before toggling, we want
+    --         the "not" of that value to determined starredness.
+    --
+    let starred  = not (isStarred bibt)
+    _ <- forkIO $ when (hasFile bibt) $ if starred then
+                    copyFile filePath dbPath
+                    else removeFile dbPath
     writeIORef (bibtexDb yesod) bs'
     return ()
   --
   return $ object ["success" .= True]
 
+
+hasFile :: BibTeX.T -> Bool
+hasFile (BibTeX.Cons _ _ fields) = fromMaybe "" (lookup "file" fields) /= ""
 
 searchForm :: Form Text
 searchForm = renderBootstrap3 BootstrapBasicForm $
@@ -119,8 +137,11 @@ pagesList :: Int -> [Int]
 pagesList total = [1..div total pageSize + 1]
 
 
-baseDir :: Text
+baseDir :: FilePath
 baseDir = "/home/noon/research/library/"
+
+dropboxPath :: FilePath
+dropboxPath = "/home/noon/Dropbox/super-reference/starred/"
 
 
 -- | TODO: Rename for "forDisplay" or something.
@@ -134,11 +155,11 @@ normalise idx (BibTeX.Cons entryType ident fields) =
       url      = findOrEmpty "url" fields
       year     = findOrEmpty "year" fields
       starred  = fromMaybe "" (lookup starKey fields) == "starred"
-      -- Note: We're not using this at the moment.
+      -- Note: meWe're not using this at the moment.
       abstract = findOrEmpty "abstract" fields
       --
       -- | Get the full path to the file
-      fullPath f = baseDir ++ L.head (splitOn ":" f)
+      fullPath f = baseDir ++ unpack (L.head (splitOn ":" f))
       --
       -- | Split authors based on how we think the strings
       --   are formatted.
