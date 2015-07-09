@@ -102,7 +102,6 @@ getStarR idx = do
     -- | Note: This is a bit sneaky: As we're toggling, and
     --         `bibt` has the value before toggling, we want
     --         the "not" of that value to determined starredness.
-    --
     let starred  = not (isStarred bibt)
     _ <- forkIO $ when (hasFile bibt) $ if starred then
                     copyFile filePath dbPath
