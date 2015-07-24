@@ -55,7 +55,7 @@ makeFoundation appSettings = do
         (appStaticDir appSettings)
 
     bibs <- liftIO bibEntries
-    bibtexDb <- liftIO $ newIORef (sortByKey "year" bibs)
+    bibtexDb <- liftIO $ newIORef (sortByKey "timestamp" bibs)
 
     -- Return the foundation
     return App {..}
