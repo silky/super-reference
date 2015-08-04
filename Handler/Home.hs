@@ -82,8 +82,8 @@ getPagedHomeR k = do
         $(widgetFile "homepage")
 
 
-writeBibToFile :: [BibTeX.T] -> FilePath -> IO ()
-writeBibToFile bibs path =
+writeBibToFile :: FilePath -> [BibTeX.T] -> IO ()
+writeBibToFile path bibs =
     writeFile path (unlines (map entry bibs))
 
 
@@ -101,7 +101,7 @@ getStarR idx = do
   --
   -- Write it, but don't wait, because we'll risk it.
   liftIO $ do
-    _ <- forkIO $ BibTeX.writeToFile "all.bib" bs'
+    _ <- forkIO $ writeBibToFile "all.bib" bs'
     let filePath = unpack (_filePath bib)
     let dbPath   = dropboxPath ++ takeFileName filePath
     -- | Note: This is a bit sneaky: As we're toggling, and

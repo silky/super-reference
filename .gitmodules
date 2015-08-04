@@ -2,3 +2,6 @@
 	path = static/js/MathJax
 	url = git@github.com:mathjax/MathJax.git
 	branch = v2.4-latest
+[submodule "bibtexier"]
+	path = bibtexier
+	url = git@github.com:silky/bibtexier.git
