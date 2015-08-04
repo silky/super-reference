@@ -8,6 +8,7 @@ import           Yesod.Form.Bootstrap3 ( BootstrapFormLayout (..)
 import           Data.Text (splitOn)
 import qualified GHC.List          as L
 import qualified Text.BibTeX.Entry as BibTeX
+import           Text.BibTeX.Format (entry)
 import           Control.Lens (element, (&), (.~))
 import           Data.List ((!!))
 import           Control.Concurrent (forkIO)
@@ -80,6 +81,10 @@ getPagedHomeR k = do
         setTitle "super-reference!"
         $(widgetFile "homepage")
 
+
+writeBibToFile :: [BibTeX.T] -> FilePath -> IO ()
+writeBibToFile bibs path =
+    writeFile path (unlines (map entry bibs))
 
 
 -- | Here we take the index in the "bibtexDb" thing, and we write
