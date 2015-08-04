@@ -10,4 +10,23 @@ Point it at a bibtex file and it will list all the entries therein, allow you to
 
 # Installation
 
-Coming soon (it relies on a modified library that may be updated by the maintainer).
+Clone
+
+````
+git clone https://github.com/silky/super-reference.git --recursive
+cd super-reference
+````
+
+Sandbox and build
+````
+cabal sandbox add-source bibtexier
+cabal install language-javascript
+cabal install -j --enable-tests --max-backjumps=-1 --reorder-goals --force-reinstalls
+cabal install yesod-bin
+````
+
+Run local dev server in bash (or whatever you use)
+````
+cabal exec bash
+yesod devel
+````
