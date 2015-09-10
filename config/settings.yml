@@ -17,5 +17,6 @@ ip-from-header: "_env:IP_FROM_HEADER:false"
 # mutable-static: false
 # skip-combining: false
 
+bibfile: "/home/noon/tools/super-reference/data/all.bib"
 copyright: ""
 #analytics: UA-YOURCODE

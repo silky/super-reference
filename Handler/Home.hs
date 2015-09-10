@@ -94,6 +94,8 @@ getStarR idx = do
   yesod <- getYesod
   bs <- liftIO $ readIORef (bibtexDb yesod)
   --
+  let bibfile = appBibFile (appSettings yesod)
+  --
   -- Update the database
   let bibt = bs !! (idx-1)
   let bs'  = bs & element (idx-1) .~ toggleStarred bibt
@@ -101,7 +103,7 @@ getStarR idx = do
   --
   -- Write it, but don't wait, because we'll risk it.
   liftIO $ do
-    _ <- forkIO $ writeBibToFile "all.bib" bs'
+    _ <- forkIO $ writeBibToFile bibfile bs'
     let filePath = unpack (_filePath bib)
     let dbPath   = dropboxPath ++ takeFileName filePath
     -- | Note: This is a bit sneaky: As we're toggling, and

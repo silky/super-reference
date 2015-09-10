@@ -54,7 +54,7 @@ makeFoundation appSettings = do
         (if appMutableStatic appSettings then staticDevel else static)
         (appStaticDir appSettings)
 
-    bibs <- liftIO bibEntries
+    bibs <- liftIO $ bibEntries (appBibFile appSettings)
     bibtexDb <- liftIO $ newIORef (sortByKey "timestamp" bibs)
 
     -- Return the foundation
@@ -76,9 +76,9 @@ sortByKey key xs = sorted
 
 
 -- | Read in the list of BibTeX entries.
-bibEntries :: IO [BibTeX.T]
-bibEntries = do
-      result  <- parseFromFile file "all.bib"
+bibEntries :: FilePath -> IO [BibTeX.T]
+bibEntries filename = do
+      result  <- parseFromFile file filename
       case result of
        Left  _  -> error  (show result)
        Right xs -> return (map BibTeX.lowerCaseFieldNames xs)
