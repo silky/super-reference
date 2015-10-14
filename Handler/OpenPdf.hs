@@ -16,12 +16,10 @@ getOpenPdfR filePath = do
 --   error codes.
 openPdf :: FilePath -> IO ()
 openPdf filePath = do
-    -- Equivalent statement:
-    -- _ <- forkIO $ readProcess "okular" [filename] "" >>= const (return ())
     _ <- forkIO $ do
         -- TOOD: Suppress stderr/stdout writing. Apparently "readProcess"
         -- captures and returns stderr, but this doesn't appear to be the
         -- case.
-        _ <- readProcess "okular" [filePath] ""
+        _ <- readProcess "xdg-open" [filePath] ""
         return ()
     return ()

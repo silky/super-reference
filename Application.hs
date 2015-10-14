@@ -72,7 +72,7 @@ sortByKey key xs = sorted
     f (BibTeX.Cons _ _ fs) (BibTeX.Cons _ _ fs') = compare (fk fs') (fk fs)
     --
     findOrEmpty :: String -> [(String, String)] -> String
-    findOrEmpty key list = fromMaybe "" (lookup key list)
+    findOrEmpty key' list = fromMaybe "" (lookup key' list)
 
 
 -- | Read in the list of BibTeX entries.
