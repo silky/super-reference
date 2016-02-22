@@ -1,0 +1,10 @@
+resolver: lts-5.3
+packages:
+    - '.'
+    - 'bibtexier/'
+
+extra-deps:
+    - latex-0.1.0.3
+
+flags: {}
+extra-package-dbs: []
