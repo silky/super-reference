@@ -19,16 +19,13 @@ git clone https://github.com/silky/super-reference.git --recursive
 cd super-reference
 ````
 
-Sandbox and build
+Build and install dependencies with `stack`
 ````
-cabal sandbox add-source bibtexier
-cabal install language-javascript
-cabal install -j --enable-tests --max-backjumps=-1 --reorder-goals --force-reinstalls
-cabal install yesod-bin
+stack build
+stack build yesod-bin cabal-install
 ````
 
-Run local dev server in bash (or whatever you use)
+Run local dev server 
 ````
-cabal exec bash
-yesod devel
+stack exec -- yesod devel
 ````

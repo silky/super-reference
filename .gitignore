@@ -30,3 +30,5 @@ cabal-dev/
 *.swp
 
 .#*
+
+.stack-work
